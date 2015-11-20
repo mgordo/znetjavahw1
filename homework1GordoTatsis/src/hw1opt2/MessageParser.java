@@ -10,25 +10,29 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import constants.MessageTypes;
 
-/**
- * @author Miguel
- *
- */
+
 public class MessageParser extends Thread {
+
+	/**
+	 * Class representing a Thread handling a connection initiated by a remote Peer, receiving their Message, and calling the appropriate PRSGame Methods to handle it
+	 */
 	
 	private Socket socket;
 	private PRSGame gameListening;
 	
-	
+
+	/**
+	 * Constructor to create a new MessageParser
+	 * @param socket the socket to receive a Message from
+	 * @param game the GUI instance
+	 */
 	public MessageParser(Socket socket,PRSGame game) {
 		this.socket=socket;
 		this.gameListening = game;
 	}
 
-	
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Runnable#run()
+	/**
+	 * This Thread's run method
 	 */
 	@Override
 	public void run() {
@@ -63,12 +67,10 @@ public class MessageParser extends Thread {
 		if(message instanceof Message){
 			Message msg = (Message) message;
 			System.out.println("DBG: MessageParser:  Received "+msg.getMsgtype()+" from "+msg.getFrom());
-			if(msg.getMsgtype().equals(MessageTypes.SEND_MOVE)){
+			if(msg.getMsgtype().equals(MessageTypes.MOVE)){
 				gameListening.moveMade(msg.getFrom(), (String)msg.getData());
 			
-			}/*else if(msg.getMsgtype().equals(MessageTypes.READY)){
-				gameListening.peerIsReady(msg.getFrom());
-			}*/else if(msg.getMsgtype().equals(MessageTypes.BYE)){
+			}else if(msg.getMsgtype().equals(MessageTypes.BYE)){
 				gameListening.removePeer(msg.getFrom());
 			}else if(msg.getMsgtype().equals(MessageTypes.HELLO)){
 				gameListening.putNewPeer(msg.getFrom(), socket.getInetAddress(), (Integer)msg.getData());
@@ -83,104 +85,6 @@ public class MessageParser extends Thread {
 			}
 		}
 		
-		
-		
-		
-		
-		/*String[] msg2 = str.split(" ");
-		ArrayList<String> msg = new ArrayList<String>(Arrays.asList(msg2));
-
-		//Message read stored in ArralyList msg
-		if(msg.get(0).equals(MessageTypes.SEND_MOVE)){
-			//SEND_MOVE, hostname, Move
-			
-			gameListening.moveMade(msg.get(1), msg.get(2));
-
-		}else if(msg.get(0).equals(MessageTypes.READY)){
-			//READY hostname
-			
-			gameListening.peerIsReady(msg.get(1));
-					
-		}else if(msg.get(0).equals(MessageTypes.BYE)){
-			//BYE hostname
-			
-			gameListening.removePeer(msg.get(1));
-			
-		}else if(msg.get(0).equals(MessageTypes.HELLO)){
-			//HELLO Hostname
-			
-			gameListening.putNewPeer(msg.get(1), socket.getInetAddress().toString(),socket.getPort());
-
-		}else if(msg.get(0).equals(MessageTypes.ACT_FAST)){
-			//ACT_FAST
-			
-			gameListening.actFast();
-			
-		}else if(msg.get(0).equals(MessageTypes.NEED_HOSTS)){
-			//NEED_HOSTS hostname
-			//No need to call main thread for sending hosts
-			String destination = peer.getAddress_list().get(msg.get(1));
-			String[] destination_parts = destination.split(" ");
-			for(String itpeer: peer.getAddress_list().keySet()){
-				Message hostmsg= new Message(peer.getMyhostname());
-				String address = peer.getAddress_list().get(itpeer);
-				String[] address_parts = address.split(" ");
-				hostmsg.makeHostMessage(itpeer, address_parts[0], Integer.parseInt(address_parts[1]));
-				
-				
-				try {
-					MessageSender.sendMessage(hostmsg, msg.get(1), InetAddress.getByName(destination_parts[0]), Integer.parseInt(destination_parts[1]));
-				} catch (NumberFormatException e) {
-					System.out.println("Error parsing port while sending host");
-					e.printStackTrace();
-				} catch (UnknownHostException e) {
-					System.out.println("Error while sending host");
-					e.printStackTrace();
-				}		
-			}
-			
-
-		}else if(msg.get(0).equals(MessageTypes.HOST)){
-			//HOST hostname ip port
-			
-			gameListening.addHost(msg.get(1), msg.get(2), Integer.valueOf(msg.get(3)));
-			
-		}else if(msg.get(0).equals(MessageTypes.ALIVE)){
-			//ALIVE hostname
-			
-			gameListening.hostAlive(msg.get(1));
-						
-		}else if(msg.get(0).equals(MessageTypes.NEED_INFO)){
-			//NEED_INFO hostname
-			String score=peer.getMyhostname()+" "+Integer.toString(peer.getScore());
-			for(String otherpeer: peer.getScore_list().keySet()){
-				score = score+" "+otherpeer+" "+Integer.toString(peer.getScore_list().get(otherpeer));
-			}
-			Message infomsg= new Message(peer.getMyhostname());
-			infomsg.makeInfo(peer.getState(),score);
-			ConcurrentHashMap<String, String> address_list = peer.getAddress_list();
-			String[] address = address_list.get(msg.get(1)).split(" ");
-			try {
-				MessageSender.sendMessage(infomsg, msg.get(1), InetAddress.getByName(address[0]), Integer.parseInt(address[1]));
-			} catch (NumberFormatException e) {
-				System.out.println("Error sending info and converting number");
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				System.out.println("Error sending info");
-				e.printStackTrace();
-			}
-		}else if(msg.get(0).equals(MessageTypes.INFO)){
-				int state = Integer.parseInt(msg.get(1));
-				HashMap<String,Integer> scores = new HashMap<String, Integer>();
-				String host;
-				for(int i=3;i<msg.size();i+=2){
-					scores.put(msg.get(i-1), Integer.parseInt(msg.get(i)));
-				}
-				gameListening.arrivedInfo(constants.State.values()[state], scores);
-		
-			
-					
-		}*/
 		try {
 			socket.close();
 		} catch (IOException e) {

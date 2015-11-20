@@ -6,7 +6,10 @@ import java.util.Map;
 
 import constants.*;
 public class Message implements Serializable{
-	
+
+	/**
+	 * Class representing a Message transmitted from one Peer to another
+	 */
 	private static final long serialVersionUID = 8497493325648186271L;
 	private String msgtype;
 	private String from;
@@ -22,14 +25,6 @@ public class Message implements Serializable{
 		
 	}
 	
-	/**
-	 * Modifies the MessageObject being called to a Ready Message
-	 */
-	public static Message makeReadyMessage(String from){
-		Message msg = new Message(from,MessageTypes.READY);
-		msg.setData(null);
-		return msg;
-	}
 	
 	/**
 	 * Modifies the MessageObject being called to a Bye Message
@@ -66,7 +61,7 @@ public class Message implements Serializable{
 	 * @param myMove Move to be sent
 	 */
 	public static Message makeMoveMessage(String from, String myMove){
-		Message msg = new Message(from,MessageTypes.SEND_MOVE);
+		Message msg = new Message(from,MessageTypes.MOVE);
 		msg.setData(new String(myMove));
 		return msg;
 	}

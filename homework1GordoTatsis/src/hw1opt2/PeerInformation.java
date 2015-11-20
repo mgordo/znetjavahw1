@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.net.InetAddress;
 
 public class PeerInformation implements Serializable{
-
+	/**
+	 * Class representing the Information needed to describe a Peer's connection and game state information 
+	 */
 	private static final long serialVersionUID = 4659173952192446700L;
 	private int score;
 	private InetAddress ip_address;

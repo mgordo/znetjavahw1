@@ -38,11 +38,14 @@ import constants.Move;
 import hw1opt2.Broadcast.GameInfo;
 
 public class PRSGame extends JPanel{
+	/**
+	 * Main UI Class, containing all the UI information, as well as most of the Game's logic
+	 */
 	private static final long serialVersionUID = 7503589667461115906L;
 
 	private static PRSGame instance;
 
-	private String playerName = "test";
+	private String playerName = "";
 	private int portTCP;
 
 	private static JFrame frame;
@@ -188,6 +191,10 @@ public class PRSGame extends JPanel{
 		return true;
 	}
 	
+	/**
+	 * Method to start the TCP Listening Thread, as well as start broadcasting the game information if this peer has started a new game 
+	 * @param host boolean flag signifying whether this peer has hosted a game or is joining another's
+	 */	
 	public void initNetworking(boolean host){
 		portTCP = Integer.parseInt(portTextField.getText());
 		playerName = nameTextField.getText();
@@ -406,7 +413,7 @@ public class PRSGame extends JPanel{
 
 	/**
 	 * Send your move choice to the other peers
-	 * @param move: Your move
+	 * @param move: This peer's move
 	 */
 	private void executeMove(String move){
 		
@@ -428,7 +435,9 @@ public class PRSGame extends JPanel{
 	}
 	
 
-	
+	/**
+	 * Method signaling the end of the current round, calculating scores and displaying everyone's moves before cleanup
+	 */	
 	private void finishGame() {
 		for (String peer: peerMap.keySet()){
 			String move = peerMap.get(peer).getMove();
@@ -472,6 +481,10 @@ public class PRSGame extends JPanel{
 		timer.start();
 	}
 	
+	/**
+	 * Method to start a Timer, that upon finishing will send an ActFast Message to the specified peer
+	 * @param name The name of the peer to start the timer for
+	 */	
 	private void addActFastTimer(final String name){
 		ActionListener sendActFastMessage = new ActionListener() {
 		    public void actionPerformed(ActionEvent evt) {
@@ -486,10 +499,23 @@ public class PRSGame extends JPanel{
 	}
 	
 	
-	/** METHODS FOR UPDATING THE GAME AFTER AN EVENT **/
+	/**
+	 * Switches visibility to another panel
+	 * @param panel: the panel to switch to
+	 */
+	private void switchPanel(JPanel panel){
+		if (panel.getParent() != null && panel.getParent() == this)
+			return;
+		removeAll();
+		add(panel);
+		revalidate();
+		frame.pack();
+	}
+	
+	/** PUBLIC METHODS FOR UPDATING THE GAME AFTER AN EVENT - RUNNING ON OTHER THREADS**/
 	/**
 	 * Method called when a peer sends its move
-	 * @param hostname Name of the host sending the move
+	 * @param name Name of the host sending the move
 	 * @param move Move made
 	 */
 	public void moveMade(final String name, final String move) {
@@ -514,6 +540,10 @@ public class PRSGame extends JPanel{
 		}
 	}
 	
+	/**
+	 * Method called when a peer is to be removed
+	 * @param name Name of the peer to be removed
+	 */
 	public void removePeer(final String name) {
 		if (name == null)
 			return;
@@ -534,7 +564,13 @@ public class PRSGame extends JPanel{
 		    }
 	    });
 	}
-
+	
+	/**
+	 * Method called when a peer is added to the game
+	 * @param name Name of the peer being added
+	 * @param ip InetAddress of the peer being added
+	 * @param port the port number that the remote peer is listening at 
+	 */
 	public void putNewPeer(final String name, final InetAddress ip, final int port) {
 		if (peerMap.containsKey(name))
 			return;
@@ -558,7 +594,10 @@ public class PRSGame extends JPanel{
 		    }
 	    });
 	}
-
+	
+	/**
+	 * Method called when a peer has sent an ActFast Message
+	 */
 	public void actFast() {
 		if (peerMap.get(playerName).getMove() == null && !actFastReceived){
     		actFastReceived = true;
@@ -569,11 +608,20 @@ public class PRSGame extends JPanel{
 		    });
 		}
 	}
-
+	
+	/**
+	 * Placeholder method to be called when a peer sends a hostAlive Message
+	 * @param name Name of the peer sending the Message
+	 */
 	public void hostAlive(String hostname) {
 		// Do Nothing!
 	}
 	
+	/**
+	 * Method called when the game's information has been received by a remote peer
+	 * @param data the game information, stored in a Map
+	 * @param name Name of the peer sending the Message
+	 */
 	public void arrivedInfo(Map<String, PeerInformation> data, final String from) {
 		peerMap.putAll(data);
 		Broadcast.setBroadcasting(true);
@@ -591,28 +639,20 @@ public class PRSGame extends JPanel{
 		    }
 	    });
 	}
-
-	public void sendInfo(String from) {
-		if (!peerMap.containsKey(from)){
-			peerRequestedInfo.add(from);
+	
+	/**
+	 * Method called to send the Game's Information to a remote peer
+	 * @param to name of the peer the information is to be sent to
+	 */
+	public void sendInfo(String to) {
+		if (!peerMap.containsKey(to)){
+			peerRequestedInfo.add(to);
 			return;
 		}
 		Message infomsg = Message.makeInfo(playerName, new ConcurrentHashMap<String,PeerInformation>(peerMap));
-		MessageSender.sendMessage(infomsg, from);
+		MessageSender.sendMessage(infomsg, to);
 	}
-	
-	/**
-	 * Switches visibility to another panel
-	 * @param panel: the panel to switch to
-	 */
-	private void switchPanel(JPanel panel){
-		if (panel.getParent() != null && panel.getParent() == this)
-			return;
-		removeAll();
-		add(panel);
-		revalidate();
-		frame.pack();
-	}
+
 
 	/**
 	 * Returns the name set by the player
@@ -634,17 +674,29 @@ public class PRSGame extends JPanel{
 	public static PRSGame getInstance(){
 		return instance;	
 	}
-	
-	public void setIpAddress(InetAddress localIP) {
-		peerMap.get(playerName).setIpAddress(localIP);
-	}
 
+	/**
+	 * Returns the current peers participating in the Game
+	 */
 	public Set<String> getPeerSet() {
 		return Collections.unmodifiableSet(peerMap.keySet());
 	}
 	
+	/**
+	 * Returns the information of the specified Peer
+	 * @param peerName the peer whose information is requested
+	 */
 	public PeerInformation getPeerInformation(String peerName){
 		return peerMap.get(peerName);
+	}
+	
+	
+	/**
+	 * Sets the local peer's InetAddress to the specified one
+	 * @param localIP the InetAddress this peer is listening at
+	 */
+	public void setIpAddress(InetAddress localIP) {
+		peerMap.get(playerName).setIpAddress(localIP);
 	}
 	
 	/**
@@ -657,12 +709,24 @@ public class PRSGame extends JPanel{
 		private JLabel peerScoreLabel;
 		private JLabel peerMoveLabel;
 		
+		/**
+		 * Private constructor for the JLabels comprising the information being presented in the UI for one peer
+		 * @param panel the Panel containing the Peer Information JLabels
+		 * @param name the name of the peer these JLabels represent 
+		 * @param score the initial score to be shown for this peer
+		 */
 		private PeerPanelControl(JPanel panel, String name, int score){
 		    peerNameLabel = new JLabel(name);
 		    peerScoreLabel = new JLabel(Integer.toString(score));
 		    peerMoveLabel = new JLabel("");
 		}
 		
+		/**
+		 * Static method to show a new peer to the UI	 
+		 * @param panel the Panel containing the Peer Information JLabels
+		 * @param name the name of the peer these JLabels represent 
+		 * @param score the initial score to be shown for this peer
+		 */
 		public static void addPeer(JPanel panel, String name, int score){
 			PeerPanelControl peerInfo = new PeerPanelControl(panel, name, score);
 			
@@ -673,6 +737,13 @@ public class PRSGame extends JPanel{
 		    peers.put(name, peerInfo);
 		}
 		
+		/**
+		 * Static method to Set the peer's Move JLabel according to whether he has made a move or not in this round, and whether it's the end of the round or not	 
+		 * @param panel the Panel containing the Peer Information JLabels
+		 * @param name the name of the peer these JLabels represent 
+		 * @param move the move this peer has performed, null if the peer has not moved yet this round
+		 * @param show boolean flag whether to show the peer's move or not
+		 */
 		public static void setPeerMove(JPanel panel, String name, String move, boolean show){
 			if (show){
 				peers.get(name).peerMoveLabel.setText(move);
@@ -685,10 +756,21 @@ public class PRSGame extends JPanel{
 			}
 		}
 		
+		/**
+		 * Static method to modify the score shown for the specified peer
+		 * @param panel the Panel containing the Peer Information JLabels
+		 * @param name the name of the peer these JLabels represent 
+		 * @param score the score to be shown for this peer
+		 */
 		public static void setPeerScore(JPanel panel, String name, int score){
 			peers.get(name).peerScoreLabel.setText(""+score);
 		}
 		
+		/**
+		 * Static method to remove a peer's JLabels from the UI
+		 * @param panel the Panel containing the Peer Information JLabels
+		 * @param name the name of the peer these JLabels represent
+		 */
 		public static void removePeer(JPanel panel, String name){
 			PeerPanelControl peerInfo = peers.get(name);
 					
@@ -700,6 +782,10 @@ public class PRSGame extends JPanel{
 			MessageSender.stopHeartbeat(name);
 		}
 		
+		/**
+		 * Static method to clear the JPanel from all the peer information JLabels
+		 * @param panel the Panel containing the Peer Information JLabels
+		 */
 		public static void clear(JPanel panel){
 			Set<String> peerSet = new HashSet<String>(peers.keySet());
 			for (String name: peerSet)
@@ -707,3 +793,4 @@ public class PRSGame extends JPanel{
 		}
 	}
 }
+

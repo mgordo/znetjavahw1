@@ -2,33 +2,22 @@ package hw1opt2;
 import java.io.IOException;
 import java.net.*;
 public class Listener extends Thread {
-	
+
+	/**
+	 * Class representing a TCP Listener for Game Messages from other Peers
+	 */
 
 	InetAddress localIP;
 	private int myport;
 	private ServerSocket serversocket;
 	private PRSGame gameListening;
-	/*public Listener(Peer peer, int port){
-		this.peer=peer;
-		gameListening=null;
-		try {
-			localIP = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			System.out.println("Error getting local IP address in listener thread");
-			e.printStackTrace();
-		}
-		myport=port;
-		try {
-			serversocket = new ServerSocket(myport);
-		} catch (IOException e) {
-			System.out.println("Error generating listening socket");
-			e.printStackTrace();
-		} 
-		
-		
-	}*/
-	
-	
+
+
+	/**
+	 * Static method to initialize the Sockets used in broadcasting and listening to broadcasts
+	 * @param port the port to listen to
+	 * @param game the GUI instance
+	 */
 	public Listener(int port, PRSGame game){
 		
 		gameListening = game;
@@ -46,10 +35,11 @@ public class Listener extends Thread {
 			System.out.println("Error generating listening socket");
 			PRSGame.getInstance().TCPListenerError(e.getMessage());
 		} 
-		
-		
 	}
 	
+	/**
+	 * The run method of the Thread extending Listener, accepting connections from other peers and sppawning a MessageParser to handle the sent Message 
+	 */
 	@Override
 	public void run(){
 		while(true){
@@ -63,12 +53,6 @@ public class Listener extends Thread {
 				System.out.println("Failed to establish connection while listening");
 				e.printStackTrace();
 			}
-			
-			
-			
 		}
-		
-		
 	}
-
 }

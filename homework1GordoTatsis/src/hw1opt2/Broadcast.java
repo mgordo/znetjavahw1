@@ -17,6 +17,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Broadcast {
+	/**
+	 * Class representing the broadcasting functionality of the Game, both in broadcasting a game the local peer is in, and in receiving the broadcasts of other Peers
+	 */
 	private static final int port = 10807;
 	private static final int delay = 5000;
 	private static DatagramSocket listeningSocket;
@@ -31,6 +34,9 @@ public class Broadcast {
 	
 	private static final ConcurrentHashMap<String,GameInfo> gameList = new ConcurrentHashMap<String,GameInfo>();
 	
+	/**
+	 * Static method to initialize the Sockets used in broadcasting and listening to broadcasts
+	 */
 	public static void init(){
 		try{
 			broadcastingSocket = new DatagramSocket();	
@@ -46,6 +52,10 @@ public class Broadcast {
 		}
 	}
 	
+
+	/**
+	 * Static class representing a Broadcast Listener, receiving and storing the broadcasts of other Peers currently in running games
+	 */
 	private static class BroadcastListener implements Runnable{
 
 		@Override
@@ -70,10 +80,19 @@ public class Broadcast {
 		}
 	}
 	
+
+	/**
+	 * Static method to receive the Broadcasts collected by the BroadcastListener
+	 */
 	public static Collection<GameInfo> getGames(){
 		return gameList.values();
 	}
 	
+
+	/**
+	 * Static method to switch the Broadcasting of the local Peer's Game on and off
+	 * @param state the state to toggle the Broadcasting to
+	 */
 	public static void setBroadcasting(boolean state){
 		synchronized (broadcastingLock) {
 			
@@ -88,7 +107,10 @@ public class Broadcast {
 			}
 		}
 	}
-	
+
+	/**
+	 * Static Runnable representing one Broadcast of the local peer's Game
+	 */
 	private final static Runnable broadcastTask = new Runnable() {
 		@Override
 		public void run() {
@@ -127,7 +149,10 @@ public class Broadcast {
 			}
 		}
 	};
-	
+
+	/**
+	 * Static class representing a Game found through BroadcastListener
+	 */
 	public static class GameInfo{
 		public final String name;
 		public final InetAddress address;
